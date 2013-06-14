@@ -1,4 +1,4 @@
-Sourcecode::Spellchecker version 0.01
+Sourcecode::Spellchecker version 0.02
 ================================
 
 This module can be used to identify common misspellings in source code for a variety of languages (C, C++, Java, Perl, etc.)

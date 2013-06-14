@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use IO::File;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 # Attribution: This data is primarily from Wikipedia's
 # "List of commonly mispelled words" although I have manually
@@ -4317,7 +4317,7 @@ __END__
 
 =head1 NAME
 
-Sourcecode::Spellchecker - Basic detection of common misspellings in source code.
+Sourcecode::Spellchecker - Detects common misspellings in source code and suggests corrections.
 
 =head1 SYNOPSIS
 
@@ -4328,29 +4328,30 @@ Sourcecode::Spellchecker - Basic detection of common misspellings in source code
   my $sourceFileName = 'MySourceFile.cpp';
   my @results = $checker->spellcheck($sourceFileName);
   if (@results) {
-	  foreach my $result (@results) {
-		  print "$sourceFileName:$result->{line}: '$result->{misspelling}' " .
-				"should be '$result->{correction}'\n";
-	  }
+    foreach my $result (@results) {
+      print "$sourceFileName:$result->{line}: "
+        "'$result->{misspelling}' should be '$result->{correction}'\n";
+      }
   }
   else {
-	  print "No spelling mistakes found.\n";
+    print "No spelling mistakes found.\n";
   }
 
 =head1 DESCRIPTION
 
-This module scans a source file, looking for common misspellings in the source,
-including in comments, string literals, and identifier names.
+This module scans a source file for common misspellings - including in comments, string literals, and identifier names - and suggests corrections.
 
-This module will therefore find 'strat' (a misspelling of 'start') in the following lines:
+For example, this module will find 'strat' (a misspelling of 'start') in the following lines:
+
   my $strat;
   const unsigned long STRAT_TIME = 0;
   int stratTime;
-  Dim TimeToStrat;
+  Dim TimeToStrat As Integer
   const char* szMsg = "It is time to strat.";
   // This is a comment indicating when we will strat
 
-However, it will purposefull not find a misspelling in the following lines even though the word 'strat' can be found in the line:
+However, it will purposefully not find misspellings in the following lines because 'strat' is embedded in another word or split in two by a change in case:
+
   std::string s = other.strAt(2);
   Strategy strategy = Strategy.RunFast;
  
@@ -4373,6 +4374,7 @@ Returns a newly created C<Sourcecode::Spellchecker> object.
 =head2 spellcheck($filename)
 
 Returns a list of misspellings of the form:
+
   (
     {line => 1, misspelling => 'sofware', correction => 'software'},
     {line => 7, misspelling => 'speach', correction => 'speech'}
@@ -4382,7 +4384,9 @@ Returns a list of misspellings of the form:
 
 C<spellcheck_source.pl> - Checks a source file for common misspellings.
 
-The list of common misspellings and corrections used by this module is primarily from Wikipedia's "List of commonly mispelled words" page at http://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings.
+The list of common misspellings and corrections used by this module is
+primarily from Wikipedia's "List of commonly mispelled words" page
+at L<http://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings>.
 
 =head1 AUTHOR
 
