@@ -1,6 +1,6 @@
 ---
-name: QML-File
-version: 0.02
+name: Sourcecode-Spellchecker
+version: 0.03
 author:
   - Zachary Blair <zblair@cpan.org>
 abstract: 'Detects common misspellings in source code and suggests corrections.'
@@ -22,7 +22,7 @@ no_index:
 provides:
   Sourcecode::Spellchecker:
     file: lib/Sourcecode/Spellchecker.pm
-    version: 0.02
+    version: 0.03
 keywords:
   - Spell
   - Sourcecode

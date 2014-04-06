@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use IO::File;
 
-our $VERSION = 0.02;
+our $VERSION = 0.03;
 
 # Attribution: This data is primarily from Wikipedia's
 # "List of commonly mispelled words" although I have manually
@@ -4239,46 +4239,57 @@ sub new {
 
     return bless {
         'spellings'      => $dictionary,
-        'anyMisspelling' => qr/$misspellingPattern/
+        'anyMisspelling' => $misspellingPattern
     }, $class;
 }
 
 # Look for common mispellings in comments and names
 sub _spellcheckLine {
     my ($self, $line) = @_;
+
     my $lowerCaseLine = lc $line;
 
-    # Disqualify lines that don't contain any misspelling, without
-    # regard for case, because they certainly won't contain a misspelling
-    # when we perform the slower search with regard for case.
-    return if $lowerCaseLine !~ $self->{anyMisspelling};
+    # Look for each possible misspelled word in the line, returning only
+    # if such a word is separated from its surroundings by space, punctuation,
+    # or a change in case.
+    while ($lowerCaseLine =~ /(.?)($self->{anyMisspelling})(.?)/g)
+    {
+        my $matchPos = $-[2];
+        my $match = substr($line, $-[2], $+[2] - $-[2]);
+        my $before = substr($line, $-[1], $+[1] - $-[1]);
+        my $after = substr($line, $-[3], $+[3] - $-[3]);
 
-    foreach my $key (keys %{ $self->{spellings} }) {
-        next if $lowerCaseLine !~ /$key/;
-
-        my ($before, $match, $after) = $line =~ /(.?)($key)(.?)/i;
-        if (defined $match && $match =~ /^(?:[A-Z]+|(?:[A-Z]?[a-z]+))$/) {
-
-            # Only report issues where the characters on either side of the
-            # match are either non-alphabetic or represent a change in case
-            # from left to right of lower case to upper-case. This matches
-            # what we see in most variable names (i.e. you see 'numFrames'
-            # but not 'NUMfRAMES').
-            my $boundaryBefore =
-                !$before
-              || $before =~ /[^a-z]/i
-              || ($before =~ /[a-z]/ && $match =~ /^[A-Z]/);
-            next if !$boundaryBefore;
-
-            my $boundaryAfter =
-                !$after
-              || $after =~ /[^a-z]/i
-              || ($match =~ /[a-z]$/ && $after =~ /[A-Z]$/);
-            next if !$boundaryAfter;
-
-            return ($key, $self->{spellings}->{$key})
-              if ($boundaryBefore && $boundaryAfter);
+        if ($match !~ /^(?:[A-Z]+|(?:[A-Z]?[a-z]+))$/) {
+            pos($lowerCaseLine) = $matchPos + 1;
+            next;
         }
+
+        # Only report issues where the characters on either side of the
+        # match are either non-alphabetic or represent a change in case
+        # from left to right of lower case to upper-case. This matches
+        # what we see in most variable names (i.e. you see 'numFrames'
+        # but not 'NUMfRAMES').
+        my $boundaryBefore =
+            !$before
+          || $before =~ /[^a-z]/i
+          || ($before =~ /[a-z]/ && $match =~ /^[A-Z]/);
+        if (!$boundaryBefore) {
+            pos($lowerCaseLine) = $matchPos + 1;
+            next;
+        }
+
+        my $boundaryAfter =
+            !$after
+          || $after =~ /[^a-z]/i
+          || ($match =~ /[a-z]$/ && $after =~ /[A-Z]$/);
+        if (!$boundaryAfter) {
+            pos($lowerCaseLine) = $matchPos + 1;
+            next;
+        }
+
+        my $key = lc $match;
+        return ($key, $self->{spellings}->{$key})
+          if ($boundaryBefore && $boundaryAfter);
     }
 
     return;
@@ -4394,7 +4405,7 @@ Zachary Blair, E<lt>zblair@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 by Zachary Blair
+Copyright (C) 2014 by Zachary D. Blair
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,

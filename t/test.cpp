@@ -29,6 +29,10 @@ int main()
 
 	// Test adding custom words to the dictionray
 	bool hootdog = true;
+    
+	// Test finding misspellings that overlap
+	// another misspelling
+	char farenheItnroduced = 'c';
 
 	return 0;
 }
